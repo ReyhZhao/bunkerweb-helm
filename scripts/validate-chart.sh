@@ -105,6 +105,7 @@ test_template_generation() {
         "ui.logs.enabled=true:With UI logs (syslog sidecar)"
         "ui.logs.enabled=true,ui.logs.syslogAddress=:With UI logs (default address)"
         "ui.logs.enabled=true,ui.logs.syslogAddress=custom.syslog:514:With UI logs (custom address)"
+        "scheduler.enabled=false:Without Scheduler"
         "controller.enabled=false:Without Controller"
         "api.enabled=false:Without API"
         "api.enabled=true,settings.api.useBearerToken.token=test-token,settings.api.ingress.enabled=true,settings.api.ingress.serverName=api.test.com:With API Ingress"

@@ -13,6 +13,7 @@ or `[CI]`.
 
 ## Unreleased
 
+- [FEATURE] `scheduler.enabled` (default `true`): set it to `false` to skip the scheduler Deployment, for a release that only runs BunkerWeb workers managed by a scheduler in another release or cluster. The value was previously not read, so the scheduler was always rendered.
 - [BUGFIX] `settings.kubernetes.skipForeignClasses` (default `true`, BunkerWeb 1.6.16+): the controller ignores Ingresses and Gateways whose class belongs to another controller.
 - [FEATURE] `settings.kubernetes.gatewayClass` sets `KUBERNETES_GATEWAY_CLASS`.
 - [BUGFIX] The UI, API, MCP and Grafana Ingresses default their `ingressClassName` to `ingressClass.name`.
