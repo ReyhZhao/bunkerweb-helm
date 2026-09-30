@@ -262,6 +262,19 @@ test_bunkerweb_specific() {
         return 1
     fi
 
+    log_info "  Testing scheduler disabled"
+    if render --set scheduler.enabled=false --dry-run; then
+        if [[ -z "$(source_block scheduler-deployment.yaml)" ]]; then
+            log_success "    ✓ Scheduler correctly disabled"
+        else
+            log_error "    ✗ Scheduler Deployment still generated when disabled"
+            return 1
+        fi
+    else
+        log_error "    ✗ Failed to generate templates with scheduler disabled"
+        return 1
+    fi
+
     # Test scheduler custom-plugin volumes/volumeMounts/initContainers (issue #87)
     log_info "  Testing scheduler initContainers/volumes/volumeMounts (custom plugins)"
     if render \
