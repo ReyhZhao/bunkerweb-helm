@@ -568,13 +568,38 @@ bunkerweb:
     timeoutSeconds: 1
     failureThreshold: 3
 
-  # Readiness probe configuration
-  readinessProbe:
+  # Startup probe configuration
+  # Strict gate: the pod is not Ready until it has received its configuration
+  # (healthcheck.sh ok only accepts "ok", never "loading"). It runs once per
+  # container lifetime, so an OOM-killed or restarted container is gated again.
+  # Liveness and readiness only start after it succeeds.
+  # WARNING: once failureThreshold is exceeded the kubelet RESTARTS the
+  # container. The window is periodSeconds x failureThreshold (5 x 180 = 15
+  # minutes) so a scheduler that is down or slow to push the first
+  # configuration (large clusters can take minutes) does not become a crash
+  # loop. Raise failureThreshold if your first push takes longer; set to null
+  # to disable the gate.
+  startupProbe:
     exec:
       command:
         - /usr/share/bunkerweb/helpers/healthcheck.sh
         - ok
-    initialDelaySeconds: 30
+    initialDelaySeconds: 0
+    periodSeconds: 5
+    timeoutSeconds: 1
+    failureThreshold: 180
+
+  # Readiness probe configuration
+  # Non-strict (no "ok" argument): accepts "ok" and "loading". On BunkerWeb
+  # 1.6.15 every reload makes /healthz answer "loading" for several seconds on
+  # all workers at once, and a strict probe would drain every endpoint. The
+  # startup probe above already guarantees the initial configuration.
+  # initialDelaySeconds is 0 because the startup probe gates this probe.
+  readinessProbe:
+    exec:
+      command:
+        - /usr/share/bunkerweb/helpers/healthcheck.sh
+    initialDelaySeconds: 0
     periodSeconds: 1
     timeoutSeconds: 1
     failureThreshold: 3

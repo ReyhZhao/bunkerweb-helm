@@ -13,6 +13,7 @@ or `[CI]`.
 
 ## Unreleased
 
+- [BUGFIX] `bunkerweb.startupProbe` (new) runs the strict `healthcheck.sh ok` once per container lifetime, and `bunkerweb.readinessProbe` now runs `healthcheck.sh` without `ok`. On BunkerWeb 1.6.15 every reload makes `/healthz` answer `loading` for several seconds on all workers at once, so the strict readiness probe drained every Service endpoint; a new, OOM-killed or restarted container is still kept out of the endpoints until it has its configuration. The startup probe allows 15 minutes (`periodSeconds: 5`, `failureThreshold: 180`) because the kubelet restarts the container once it is exceeded: raise `failureThreshold` if your first configuration push takes longer, or set `bunkerweb.startupProbe: null` to drop the gate. Works on 1.6.15 and 1.6.16. (Refs #97)
 - [BUGFIX] `settings.kubernetes.skipForeignClasses` (default `true`, BunkerWeb 1.6.16+): the controller ignores Ingresses and Gateways whose class belongs to another controller.
 - [FEATURE] `settings.kubernetes.gatewayClass` sets `KUBERNETES_GATEWAY_CLASS`.
 - [BUGFIX] The UI, API, MCP and Grafana Ingresses default their `ingressClassName` to `ingressClass.name`.
