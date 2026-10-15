@@ -13,7 +13,7 @@ or `[CI]`.
 
 ## Unreleased
 
-- [FEATURE] `scheduler.enabled` (default `true`): set it to `false` to skip the scheduler Deployment, for a release that only runs BunkerWeb workers managed by a scheduler in another release or cluster. The value was previously not read, so the scheduler was always rendered.
+- [FEATURE] `scheduler.enabled` (default `true`): set it to `false` to skip the scheduler Deployment when a scheduler in another release or cluster manages this release's workers. The value was previously not read.
 
 ## v1.2.0 - 2026/10/15
 
