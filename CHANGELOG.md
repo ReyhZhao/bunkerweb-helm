@@ -14,9 +14,21 @@ or `[CI]`.
 ## Unreleased
 
 - [FEATURE] `scheduler.enabled` (default `true`): set it to `false` to skip the scheduler Deployment, for a release that only runs BunkerWeb workers managed by a scheduler in another release or cluster. The value was previously not read, so the scheduler was always rendered.
+
+## v1.2.0 - 2026/10/15
+
+App version: `1.6.16`.
+
+- [DEPS] upgrade to BunkerWeb 1.6.16.
+- [BUGFIX] Worker pods no longer drop out of the Service on each reload: on 1.6.15, `/healthz` answered `loading` during a reload, failing the strict readiness probe on every pod at once. If you pin `bunkerweb.tag: 1.6.15`, drop `ok` from `bunkerweb.readinessProbe.exec.command`. (Refs #97)
+- [BUGFIX] New `bunkerweb.startupProbe` (`healthcheck.sh ok`, up to 15 minutes, then the kubelet restarts the container) keeps a starting or restarted worker out of the Service until it holds its configuration. `bunkerweb.readinessProbe.initialDelaySeconds` goes from `30` to `0`. (Refs #97)
 - [BUGFIX] `settings.kubernetes.skipForeignClasses` (default `true`, BunkerWeb 1.6.16+): the controller ignores Ingresses and Gateways whose class belongs to another controller.
 - [FEATURE] `settings.kubernetes.gatewayClass` sets `KUBERNETES_GATEWAY_CLASS`.
 - [BUGFIX] The UI, API, MCP and Grafana Ingresses default their `ingressClassName` to `ingressClass.name`.
+- [FEATURE] `rbac`: the ClusterRole can read `ingressclasses`, which `settings.kubernetes.skipForeignClasses` needs.
+- [FEATURE] New 1.6.16 settings: `scheduler.features.global.bansTlsDropReasons`, `scheduler.features.antibot.antibotJavascriptDifficulty` and `scheduler.features.crowdSec.crowdSecBanRefresh`.
+- [FEATURE] `settings.redis.redisClusterNodes` (`REDIS_CLUSTER_NODES`): Redis Cluster seed nodes. It needs `redis.enabled: false` and excludes Sentinel; switching to cluster mode starts from an empty keyspace.
+- [CI] `dev.yml`: the checkout step no longer persists credentials.
 
 ## v1.1.0 - 2026/09/21
 
