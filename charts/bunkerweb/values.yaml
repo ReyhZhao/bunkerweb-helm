@@ -175,6 +175,13 @@ settings:
     # Connection timeout in milliseconds (upstream default 1000 when left empty)
     redisTimeout: ""
 
+    # ----- REDIS CLUSTER (BunkerWeb 1.6.16+) -----
+    # Space-separated seed nodes "host[:port] host[:port] ..." of a Redis Cluster; BunkerWeb discovers
+    # the rest from there. redisHost is NOT required. Requires redis.enabled: false, no Sentinel and
+    # redisDatabase empty or 0. Switching an existing deployment to cluster mode starts from an empty
+    # keyspace: bans, sessions and reports are not carried over.
+    redisClusterNodes: ""
+
     # ----- REDIS SENTINEL (high availability) -----
     # When redisSentinelHosts is set, BunkerWeb resolves the master through the
     # Sentinels and redisHost is NOT required. Requires redis.enabled: false
@@ -449,7 +456,7 @@ bunkerweb:
   # Container image configuration
   # Also available at ghcr.io/bunkerity/bunkerweb
   repository: docker.io/bunkerity/bunkerweb
-  tag: 1.6.15
+  tag: 1.6.16
   pullPolicy: IfNotPresent
 
   # Resource requests and limits
@@ -590,15 +597,17 @@ bunkerweb:
     failureThreshold: 180
 
   # Readiness probe configuration
-  # Non-strict (no "ok" argument): accepts "ok" and "loading". On BunkerWeb
-  # 1.6.15 every reload makes /healthz answer "loading" for several seconds on
-  # all workers at once, and a strict probe would drain every endpoint. The
-  # startup probe above already guarantees the initial configuration.
+  # Strict ("ok" only, never "loading"): BunkerWeb 1.6.16 answers "ok" on
+  # /healthz only once the instance holds its configuration, and a reload no
+  # longer flips every worker to "loading" at once, so the strict probe does not
+  # drain the endpoints. On BunkerWeb 1.6.15 set the non-strict form (drop the
+  # "ok" argument) instead, see the changelog of chart 1.2.0.
   # initialDelaySeconds is 0 because the startup probe gates this probe.
   readinessProbe:
     exec:
       command:
         - /usr/share/bunkerweb/helpers/healthcheck.sh
+        - ok
     initialDelaySeconds: 0
     periodSeconds: 1
     timeoutSeconds: 1
@@ -659,7 +668,7 @@ scheduler:
   # Container image configuration
   # Also available at ghcr.io/bunkerity/bunkerweb-scheduler
   repository: docker.io/bunkerity/bunkerweb-scheduler
-  tag: 1.6.15
+  tag: 1.6.16
   pullPolicy: IfNotPresent
 
   # Image pull secrets (overrides global setting)
@@ -725,6 +734,9 @@ scheduler:
       maxHeaders: ""
       # Timeout for graceful shutdown of old NGINX workers after reloads (e.g. "30s")
       workerShutdownTimeout: ""
+      # Ban reasons whose banned IPs are dropped at the TLS ClientHello instead of getting the 403 page
+      # (space-separated: crowdsec, bad_behavior, manual, ui, api). Empty disables it. BunkerWeb 1.6.16+
+      bansTlsDropReasons: ""
 
     # =============================================================================
     # NGINX TIMEOUTS
@@ -806,6 +818,9 @@ scheduler:
       antibotTimeResolve: ""
       # Challenge validity duration (seconds)
       antibotTimeValid: ""
+      # Proof-of-work difficulty of the JavaScript challenge, in leading zero bits (16 to 28, upstream default 16).
+      # Each extra bit doubles the average solve time. BunkerWeb 1.6.16+
+      antibotJavascriptDifficulty: ""
       # IPs to bypass antibot challenges (space-separated)
       antibotIgnoreIp: ""
       # URIs to bypass antibot challenges (regex patterns, space-separated)
@@ -1337,6 +1352,9 @@ scheduler:
       crowdSecMode: ""
       # AppSec component URL (optional)
       crowdSecAppsecUrl: ""
+      # Turn CrowdSec blocks into short BunkerWeb bans renewed while the decision lasts; the value is the
+      # longest a ban lasts before CrowdSec is asked again (e.g. "5m"). "0" (upstream default) disables it. BunkerWeb 1.6.16+
+      crowdSecBanRefresh: ""
       # Dedicated CrowdSec management machine, used to investigate alerts and remove
       # decisions from the web UI. Leave empty for a read-only bouncer.
       crowdSecManagementLogin: ""
@@ -1467,7 +1485,7 @@ controller:
   # Container image configuration
   # Also available at ghcr.io/bunkerity/bunkerweb-autoconf
   repository: docker.io/bunkerity/bunkerweb-autoconf
-  tag: 1.6.15
+  tag: 1.6.16
   pullPolicy: IfNotPresent
 
   # Image pull secrets (overrides global setting)
@@ -1570,7 +1588,7 @@ ui:
   # Container image configuration
   # Also available at ghcr.io/bunkerity/bunkerweb-ui
   repository: docker.io/bunkerity/bunkerweb-ui
-  tag: 1.6.15
+  tag: 1.6.16
   pullPolicy: IfNotPresent
 
   # Image pull secrets (overrides global setting)
@@ -1701,7 +1719,7 @@ api:
   # Container image configuration
   # Also available at ghcr.io/bunkerity/bunkerweb-api
   repository: docker.io/bunkerity/bunkerweb-api
-  tag: 1.6.15
+  tag: 1.6.16
   pullPolicy: IfNotPresent
 
   # Image pull secrets (overrides global setting)

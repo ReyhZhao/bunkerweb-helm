@@ -284,7 +284,7 @@ test_bunkerweb_specific() {
         return 1
     fi
 
-    # Test worker probes: strict startupProbe gate, non-strict readinessProbe (issue #97)
+    # Test worker probes: strict startupProbe gate and strict readinessProbe (issue #97)
     log_info "  Testing worker startupProbe/readinessProbe on every kind"
     local kind doc_name probe_doc startup_block readiness_block
     for kind in Deployment DaemonSet StatefulSet; do
@@ -297,8 +297,8 @@ test_bunkerweb_specific() {
         startup_block=$(echo "$probe_doc" | awk '/^ +startupProbe:/{f=1;next} f&&/^ +[a-zA-Z]+Probe:/{f=0} f')
         readiness_block=$(echo "$probe_doc" | awk '/^ +readinessProbe:/{f=1;next} f&&/^ +[a-zA-Z]+:/&&!/^ {12}/{f=0} f')
         if contains "$startup_block" "healthcheck.sh" && contains "$startup_block" "- ok" \
-            && contains "$readiness_block" "healthcheck.sh" && ! contains "$readiness_block" "- ok"; then
-            log_success "    ✓ $kind: strict startupProbe, non-strict readinessProbe"
+            && contains "$readiness_block" "healthcheck.sh" && contains "$readiness_block" "- ok"; then
+            log_success "    ✓ $kind: strict startupProbe and readinessProbe"
         else
             log_error "    ✗ $kind: startupProbe/readinessProbe did not render as expected"
             return 1

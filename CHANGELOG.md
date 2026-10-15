@@ -11,12 +11,20 @@ or `[CI]`.
 > initial-development note because those `0.0.x` numbers were reused across the `1.6.0-rc`
 > rollbacks.
 
-## Unreleased
+## v1.2.0 - 2026/10/15
 
-- [BUGFIX] `bunkerweb.startupProbe` (new) runs the strict `healthcheck.sh ok` once per container lifetime, and `bunkerweb.readinessProbe` now runs `healthcheck.sh` without `ok`. On BunkerWeb 1.6.15 every reload makes `/healthz` answer `loading` for several seconds on all workers at once, so the strict readiness probe drained every Service endpoint; a new, OOM-killed or restarted container is still kept out of the endpoints until it has its configuration. The startup probe allows 15 minutes (`periodSeconds: 5`, `failureThreshold: 180`) because the kubelet restarts the container once it is exceeded: raise `failureThreshold` if your first configuration push takes longer, or set `bunkerweb.startupProbe: null` to drop the gate. Works on 1.6.15 and 1.6.16. (Refs #97)
+App version: `1.6.16`.
+
+- [DEPS] upgrade to BunkerWeb 1.6.16.
+- [BUGFIX] Worker pods no longer drop out of the Service on each reload: on 1.6.15, `/healthz` answered `loading` during a reload, failing the strict readiness probe on every pod at once. If you pin `bunkerweb.tag: 1.6.15`, drop `ok` from `bunkerweb.readinessProbe.exec.command`. (Refs #97)
+- [BUGFIX] New `bunkerweb.startupProbe` (`healthcheck.sh ok`, up to 15 minutes, then the kubelet restarts the container) keeps a starting or restarted worker out of the Service until it holds its configuration. `bunkerweb.readinessProbe.initialDelaySeconds` goes from `30` to `0`. (Refs #97)
 - [BUGFIX] `settings.kubernetes.skipForeignClasses` (default `true`, BunkerWeb 1.6.16+): the controller ignores Ingresses and Gateways whose class belongs to another controller.
 - [FEATURE] `settings.kubernetes.gatewayClass` sets `KUBERNETES_GATEWAY_CLASS`.
 - [BUGFIX] The UI, API, MCP and Grafana Ingresses default their `ingressClassName` to `ingressClass.name`.
+- [FEATURE] `rbac`: the ClusterRole can read `ingressclasses`, which `settings.kubernetes.skipForeignClasses` needs.
+- [FEATURE] New 1.6.16 settings: `scheduler.features.global.bansTlsDropReasons`, `scheduler.features.antibot.antibotJavascriptDifficulty` and `scheduler.features.crowdSec.crowdSecBanRefresh`.
+- [FEATURE] `settings.redis.redisClusterNodes` (`REDIS_CLUSTER_NODES`): Redis Cluster seed nodes. It needs `redis.enabled: false` and excludes Sentinel; switching to cluster mode starts from an empty keyspace.
+- [CI] `dev.yml`: the checkout step no longer persists credentials.
 
 ## v1.1.0 - 2026/09/21
 
